@@ -148,4 +148,10 @@ if __name__ == '__main__':
     backend = BhavBackend()
     backend.refresh_bhav()
 
+    HOST = '0.0.0.0'
+    PORT = int(os.environ.get('PORT', '5010'))
+    cherrypy.config.update({
+                            'server.socket_host': HOST,
+                            'server.socket_port': PORT,
+                           })
     cherrypy.quickstart(backend)
