@@ -1,0 +1,4 @@
+*.CSV
+venv3/
+.idea/
+.vscode/
