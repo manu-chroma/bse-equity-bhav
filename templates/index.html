@@ -108,7 +108,7 @@
             $('#autocomplete-suggestions').empty();
             data.forEach(element => {
                 $('#autocomplete-suggestions').append(`
-                <li onclick='fetchdata("${element}")'>${element}</li>
+                <li style='cursor: pointer;' onclick='fetchdata("${element}")'>${element}</li>
                 `)
             });
         });
