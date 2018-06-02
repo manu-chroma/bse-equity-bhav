@@ -141,7 +141,7 @@ class BhavBackend:
             }))
 
         top10_close = []
-        for row in sorted(bhav_data, key=operator.itemgetter('CLOSE'), reverse=True)[:10]:
+        for row in sorted(bhav_data, key=lambda x: float(x['CLOSE']), reverse=True)[:10]:
             top10_close.append({
                 'SC_CODE': row['SC_CODE'],
                 'SC_NAME': row['SC_NAME'],
