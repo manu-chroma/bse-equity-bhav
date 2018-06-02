@@ -41,7 +41,7 @@ class BhavBackend:
             data = self.get_bhav_data_current()
             self._update_database(data)
         except Exception as e:
-            e.with_traceback()
+            cherrypy.log(e)
             return json.dumps({"status": "FAIL"})
 
         return json.dumps({"status": "SUCCESS"})
@@ -51,18 +51,21 @@ class BhavBackend:
         current_date = datetime.datetime.now(tz=IST_TZ)
 
         request_data_url = self.BASE_URL_BHAV_COPY.format(date=current_date.strftime('%d%m%y'))
-        print("Fetching data from.." + request_data_url)
+        cherrypy.log("Fetching data from.." + request_data_url)
         self.last_db_update_time = current_date
         res = self._fetch_data(request_data_url)
 
-        # if trading day has not ended, fetch data for the previous day
-        # in case of zip file:
-        # headers['content-type'] == 'application/x-zip-compressed'
+        # check if data is available for today
+        # if not, fetch data for the previous day
+
+        # no zip file as response
         if 'text/html' in res.headers['content-type']:
-            prev_date = current_date - timedelta(days=1)
-            request_data_url = self.BASE_URL_BHAV_COPY.format(date=prev_date.strftime('%d%m%y'))
+            prev_trading_day = self._last_weekday(current_date)
+
+            request_data_url = self.BASE_URL_BHAV_COPY.format(date=prev_trading_day.strftime('%d%m%y'))
+            cherrypy.log("Fetching data from.." + request_data_url)
             res = self._fetch_data(request_data_url)
-            self.last_db_update_time = prev_date
+            self.last_db_update_time = prev_trading_day
 
         # parse csv data
         csv_file = self._unzip_data(BytesIO(res.content))
@@ -104,11 +107,24 @@ class BhavBackend:
             "result_set": json.loads(result_list)
         })
 
+    # no trading happens on weekend
+    # so skip those days
+    def _last_weekday(self, date: datetime.datetime):
+
+        weekday = date.weekday()
+
+        days_to_skip = skip = {
+            6: 2,  # sunday -> friday
+            0: 3  # mon -> friday
+        }.get(weekday, 1)  # default fallback to 1 day
+
+        return date - timedelta(days=days_to_skip)
+
     def _fetch_data(self, request_data_url: str) -> requests.Response:
         try:
             res = requests.get(request_data_url)
         except Exception as e:
-            e.with_traceback()
+            cherrypy.log(e)
 
         return res
 
@@ -151,7 +167,7 @@ if __name__ == '__main__':
     HOST = '0.0.0.0'
     PORT = int(os.environ.get('PORT', '5010'))
     cherrypy.config.update({
-                            'server.socket_host': HOST,
-                            'server.socket_port': PORT,
-                           })
+        'server.socket_host': HOST,
+        'server.socket_port': PORT,
+    })
     cherrypy.quickstart(backend)
