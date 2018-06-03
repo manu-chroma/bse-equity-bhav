@@ -29,7 +29,7 @@
             <h1>BSE EQUITY Bhav</h1>
         </div>
         
-        <div class="col-md-3">
+        <div class="col-sm-3">
             <div class="form-group">
                 <label for="searchbox">Search</label>
                 <input class="form-control" id="searchbox" placeholder="Enter company name">
@@ -38,7 +38,7 @@
     </div>
     
     <div class="container">
-        <div class="col-md-4">
+        <div class="col-sm-4">
             <div id="autocomplete-suggestions">
             </div>
         </div>
@@ -49,10 +49,10 @@
         
         
         <div class="row">
-            <div class="col-md-9">
+            <div class="col-sm-9">
                 <h3>Top Ten Stocks by end of day: {{date}}</h3>
             </div>
-            <div class="col-md-3">
+            <div class="col-sm-3">
                 <div class='btn btn-outline-primary btn-sm' id="refresh-bhav" data-toggle="popover" title="Refreshing.."
                 data-content="This popover will dissapper after refreshing!">
                 Refresh Bhav Data
@@ -100,8 +100,22 @@
     })
     
     $("#searchbox").on('input', function () {
+
+        if($("#searchbox").val() === '') {
+            $('#autocomplete-suggestions').empty();
+            return;
+        }
+
+
         $.get("/autocomplete/?query_str=" + $("#searchbox").val())
         .done(function (data) {
+            // in case callback happens little
+            // later after searchbox is cleared
+            if($("#searchbox").val() === '') {
+               $('#autocomplete-suggestions').empty();
+                return;
+            }
+
             console.log('triggered!')
             data = JSON.parse(data)['autocomplete']
             console.log(data)
